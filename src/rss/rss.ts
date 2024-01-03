@@ -1,10 +1,11 @@
 // Terceros
 import Parser from 'rss-parser';
+import Regex from '../shared/utility/regex';
 
 
 export default class Rss {
     constructor(
-        private regex = /<img.*?src=["'](.*?)["']/
+        private regex = new Regex()
     ) { }
     async fetchRss(urlRss: string) {
         try {
@@ -17,11 +18,12 @@ export default class Rss {
     }
     getUrlImgToDownload(feed: { [key: string]: any; } & Parser.Output<{ [key: string]: any; }>): string[] {
         const urlsImg = [];
-        if (feed) {
-
+        if (feed.items) {
             for (const item of feed.items) {
-                const match = item.content!.match(this.regex)
-                match ? urlsImg.push(match[1]) : null;
+                if (item.content){
+                    const urlFilter = this.regex.filterSrc(item.content);
+                    if (urlFilter) urlsImg.push(urlFilter);
+                }
             }
         }
         return urlsImg;
