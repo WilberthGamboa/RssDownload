@@ -5,7 +5,7 @@ export default class Regex {
     ){
 
     }
-    removeSpecialCharacters(text:string): string | undefined {
+    removeSpecialCharacters(text:string): string {
         const parsedText = text.match(this.regexSpecialCharacters);
         const filteredText = parsedText ? parsedText.join('') : '';
         return filteredText;
