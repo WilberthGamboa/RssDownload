@@ -1,98 +1,43 @@
-import ImgDownload from "./shared/imgDownload";
+import ImgDownload from './shared/imgDownload';
 import Rss from "./rss/rss";
-import figlet from 'figlet';
-import * as fs from 'node:fs'
-import csv from 'csv-parser'
+import File from "./file/file";
+import Regex from './shared/utility/regex';
+import Alert from './alert/alert';
 
-
-
-const main = async () =>{
-    const rss = new Rss();
-    const imgDownload = new ImgDownload();
-    let results: any[] = [];
-     fs.createReadStream('rss.csv')
-  .pipe(csv({ separator: ',',headers:false }))
-  .on('data', (data:any) => {
-
-    results.push(data)
- 
-
-    
-})
-  .on('end', async () => {
-
-    figlet("RSS DOWNLOADER", function (err, data) {
-        if (err) {
-          console.log("Something went wrong...");
-          console.dir(err);
-          return;
-        }
-        console.log(data);
-      });
-    for (const result of results) {
-        for (const key in result) {
-           
-                const element = result[key];
-                 const feed = await rss.fetchRss(element);
-
-     if (feed) {
-         if (feed.title) {
-             imgDownload.folderSaveImgRss(feed.title);
-                 const array = rss.getUrlImgToDownload(feed)
-         await imgDownload.downloadImg(  array,feed.title)
-         }}
-          
-        }
-    }
- 
-   
-    // [
-    //   { NAME: 'Daffy Duck', AGE: '24' },
-    //   { NAME: 'Bugs Bunny', AGE: '22' }
-    // ]
-  });
-
-
-  
-
-//  for (const result of results[0]) {
-   /*
-    const feed = await rss.fetchRss(result);
-
-    console.log(feed?.title)
-     if (feed) {
-         if (feed.title) {
-             imgDownload.folderSaveImgRss(feed.title);
-                 const array = rss.getUrlImgToDownload(feed)
-         await imgDownload.downloadImg(  array,feed.title)
-         }
-     
-  
-  //   }
-   
-    
+class Main {
+  private rss: Rss;
+  private imgDownload: ImgDownload;
+  private file: File;
+  private regex: Regex;
+  private alert: Alert;
+  constructor() {
+    this.rss = new Rss();
+    this.imgDownload = new ImgDownload();
+    this.file = new File();
+    this.regex = new Regex();
+    this.alert = new Alert()
   }
-  /*
-    figlet("RSS DOWNLOAD", function (err, data) {
-        if (err) {
-          return;
-        }
-        console.log(data);
-      });
- const feed = await rss.fetchRss('https://www.xataka.com/feedburner.xml');
 
-   console.log(feed?.title)
-    if (feed) {
-        if (feed.title) {
-            imgDownload.folderSaveImgRss(feed.title);
-                const array = rss.getUrlImgToDownload(feed)
-        await imgDownload.downloadImg(  array,feed.title)
+  async main() {
+    this.alert.welcomeMessage();
+    const urls = await this.file.readCsv();
+    for (const result of urls) {
+      for (const key in result) {
+        const element = result[key];
+        const feed = await this.rss.fetchRss(element);
+        if (feed) {
+          if (feed.title) {
+            this.imgDownload.createFolder(this.regex.removeSpecialCharacters(feed.title));
+            const array = this.rss.getUrlImgToDownload(feed)
+            await this.imgDownload.downloadImg(array, this.regex.removeSpecialCharacters(feed.title));
+          }
         }
-    
- 
+      }
     }
-  */
- 
+
+  }
+
 }
 
-main()
+const main = new Main();
+main.main()
